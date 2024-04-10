@@ -42,10 +42,6 @@ namespace UnityEngine.XR.Hands.Samples.VisualizerSample
         GameObject m_RightHandMesh;
 
         [SerializeField]
-        [Tooltip("(Optional) If this is set, the hand meshes will be assigned this material.")]
-        Material m_HandMeshMaterial;
-
-        [SerializeField]
         [Tooltip("Tells the Hand Visualizer to draw the meshes for the hands.")]
         bool m_DrawMeshes;
         bool m_PreviousDrawMeshes;
@@ -191,7 +187,7 @@ namespace UnityEngine.XR.Hands.Samples.VisualizerSample
                     Handedness.Left,
                     transform,
                     m_LeftHandMesh,
-                    m_HandMeshMaterial,
+                    null,
                     m_DebugDrawPrefab,
                     m_VelocityPrefab);
             }
@@ -202,7 +198,7 @@ namespace UnityEngine.XR.Hands.Samples.VisualizerSample
                     Handedness.Right,
                     transform,
                     m_RightHandMesh,
-                    m_HandMeshMaterial,
+                    null,
                     m_DebugDrawPrefab,
                     m_VelocityPrefab);
             }

@@ -3,16 +3,16 @@ using UnityEngine;
 
 namespace Project.Hands
 {
-    public class HandJointPosePovider : HandPoseProvider
+    public class HandJointPoseProvider : HandPoseProvider
     {
         [SerializeField]
         [Tooltip("The specific joint whose pose we are retrieving.")]
-        private TrackedHandJoint joint;
+        private TrackedHandJoint m_Joint;
 
         /// <summary>
         /// The specific joint whose pose we are retrieving.
         /// </summary>
-        public TrackedHandJoint Joint { get => joint; set => joint = value; }
+        public TrackedHandJoint Joint { get => m_Joint; set => m_Joint = value; }
 
         /// <summary>
         /// Tries to get the pose of a specific hand joint on a specific hand in worldspace.

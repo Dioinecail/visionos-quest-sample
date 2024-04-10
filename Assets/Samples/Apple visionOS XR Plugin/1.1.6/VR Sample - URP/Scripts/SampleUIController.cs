@@ -46,7 +46,7 @@ namespace UnityEngine.XR.VisionOS.Samples.URP
             // If building in Windowed or Mixed Reality mode, VisionOSLoader may not be active
             if (m_Loader == null)
             {
-                m_HandSubsystemToggleButton.SetActive(false);
+                //m_HandSubsystemToggleButton.SetActive(false);
                 return;
             }
 

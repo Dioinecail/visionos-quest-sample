@@ -24,6 +24,11 @@ namespace Project.Hands
             this.radius = radius;
         }
 
+        public HandJointPose(Transform target) : this(target.position, target.rotation, 0.1f)
+        {
+
+        }
+
         /// <summary>
         /// Initializes a new <see cref="HandJointPose"/> struct.
         /// </summary>
