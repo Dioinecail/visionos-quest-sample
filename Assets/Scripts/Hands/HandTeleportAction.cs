@@ -1,6 +1,5 @@
 using Project.Core;
 using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit.Inputs.Readers;
@@ -37,7 +36,6 @@ namespace Project.Hands
 
         [SerializeField] private InputActionProperty m_ActivateTeleportAction;
         [SerializeField] private InputActionProperty m_InvokeTeleportAction;
-        [SerializeField] private TMP_Text m_Debug;
 
         private XRInputButtonReader m_TargetRayActivateTeleportInput;
         private XRInputButtonReader m_TargetRayInvokeTeleportInput;
@@ -71,8 +69,6 @@ namespace Project.Hands
             isFoundFingers &= m_HandPoseProvider.TryGetJoint(TrackedHandJoint.ThumbTip, out var thumbTipPose);
             isFoundFingers &= TryGetThumbDirection(out var thumbDirection);
 
-            DebugStuff(indexDirection, middleDirection, ringDirection, pinkyDirection, thumbDirection);
-
             if (!isFoundFingers)
             {
                 m_IndexDirection 
@@ -95,7 +91,6 @@ namespace Project.Hands
                 && m_PinkyDirection < m_OtherFingersDirectionThreshold;
 
             // display the teleport ray visuals but not activate the teleport
-
             var wasTeleportActive = isTeleportActive;
 
             if(isTeleportActive)
@@ -124,50 +119,7 @@ namespace Project.Hands
                 m_TeleportControlsVisual.SetActive(false);
             }
 
-            //if (isTeleportActive)
-            //{
-            //    var isInvoked = thumbDirection <= (m_TeleportInvokedLastFrame ? m_ThumbFingerDirectionThreshold - 0.1f : m_ThumbFingerDirectionThreshold);
-
-            //    if (!(m_InvokeTeleportAction.action?.controls.Count > 0))
-            //    {
-            //        m_TargetRayInvokeTeleportInput.QueueManualState(isInvoked,
-            //            1.0f,
-            //            isInvoked && !m_TeleportInvokedLastFrame,
-            //            !isInvoked && m_TeleportInvokedLastFrame);
-            //    }
-
-            //    m_TeleportInvokedLastFrame = isInvoked;
-            //}
-            //else
-            //{
-            //    if (!(m_InvokeTeleportAction.action?.controls.Count > 0))
-            //    {
-            //        m_TargetRayInvokeTeleportInput.QueueManualState(false,
-            //            0.0f,
-            //            false && !m_TeleportInvokedLastFrame,
-            //            !false && m_TeleportInvokedLastFrame);
-            //    }
-
-            //    m_TeleportInvokedLastFrame = false;
-            //}
-
             m_TeleportWasActiveLastFrame = isTeleportActive;
-        }
-
-        private void DebugStuff(float indexDirection, float middleDirection, float ringDirection, float pinkyDirection, float thumbDirection)
-        {
-            if (m_Debug == null)
-                return;
-
-            var sb = new System.Text.StringBuilder();
-
-            sb.AppendLine($"Index: {indexDirection.ToString("0.##")}");
-            sb.AppendLine($"Middle: {middleDirection.ToString("0.##")}");
-            sb.AppendLine($"Ring: {ringDirection.ToString("0.##")}");
-            sb.AppendLine($"Pinky: {pinkyDirection.ToString("0.##")}");
-            sb.AppendLine($"Thumb: {thumbDirection.ToString("0.##")}");
-
-            m_Debug.text = sb.ToString();
         }
 
         private bool TryGetFingerDirection(TrackedHandJoint finger, HandJointPose palmRef, out float direction)

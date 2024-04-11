@@ -14,7 +14,6 @@ namespace Project.Core
     {
         [SerializeField] private PoseProvider[] m_AimProviders;
         [SerializeField] private PoseProvider[] m_DevicePoseProviders;
-        [SerializeField] private TMP_Text m_Debug;
 
         public PoseProvider[] PoseProviders => m_AimProviders;
 
@@ -78,12 +77,6 @@ namespace Project.Core
             if (m_ActiveAimPoseProvider != null && m_ActiveAimPoseProvider.TryGetPose(out var pose))
             {
                 m_Transform.SetPositionAndRotation(pose.position, pose.rotation);
-                var sb = new System.Text.StringBuilder();
-
-                sb.AppendLine($"pose.position: '{pose.position}'");
-                sb.AppendLine($"pose.rotation: '{pose.rotation}'");
-
-                m_Debug.text = sb.ToString();
 
                 if (hasSelection)
                 {

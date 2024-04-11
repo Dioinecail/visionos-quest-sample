@@ -4,7 +4,9 @@ namespace Project.Hands
 {
     public class HandAimProvider : HandPoseProvider
     {
-        private HandRay m_HandRay = new HandRay();
+        [SerializeField] private Vector3 m_AimOffset;
+
+        private HandRay m_HandRay = new HandRay(0.02f);
         private HandJointPose m_Knuckle;
         private HandJointPose m_Palm;
 
@@ -19,7 +21,10 @@ namespace Project.Hands
             // Tick the hand ray generator function. Uses index knuckle for position.
             if (poseRetrieved)
             {
-                m_HandRay.Update(m_Knuckle.Position, -m_Palm.Up, Camera.main.transform, m_TargetHand);
+                var cameraTransform = Camera.main.transform;
+                var aimPosition = m_Knuckle.Position + cameraTransform.TransformDirection(m_AimOffset);
+
+                m_HandRay.Update(aimPosition, -m_Palm.Up, Camera.main.transform, m_TargetHand);
 
                 pose = new Pose(
                     m_HandRay.Ray.origin,

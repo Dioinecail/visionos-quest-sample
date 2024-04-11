@@ -266,6 +266,7 @@ MonoBehaviour:
   m_TargetHand: 2
   m_HandSkeletonDriver: {fileID: 5860815752527618934}
   m_HandFacingAwayTolerance: 75
+  m_AimOffset: {x: -0.03, y: 0.02, z: 0}
 --- !u!114 &133509338880877498
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -407,9 +408,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_HandPoseProvider: {fileID: 3972231384003196134}
   m_TargetRayInteractor: {fileID: 0}
+  m_TeleportControlsVisual: {fileID: 0}
   m_IndexFingerDirectionThreshold: 0.65
   m_OtherFingersDirectionThreshold: -0.25
   m_ThumbFingerDirectionThreshold: -0.45
+  m_DirectionLerpSpeed: 0.25
   m_ActivateTeleportAction:
     m_UseReference: 1
     m_Action:

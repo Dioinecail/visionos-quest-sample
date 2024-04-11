@@ -8,7 +8,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals;
 
 namespace Project.Core
 {
-    public class AdaptireRayVisuals : XRInteractorLineVisual
+    public class AdaptiveRayVisuals : XRInteractorLineVisual
     {
         [SerializeField] private HandTeleportAction m_TeleportAction;
         [SerializeField] private LineRenderer m_LineVisual;

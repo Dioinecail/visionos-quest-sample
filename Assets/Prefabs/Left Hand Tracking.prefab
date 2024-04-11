@@ -131,6 +131,7 @@ MonoBehaviour:
   m_TargetHand: 1
   m_HandSkeletonDriver: {fileID: 4082059375106541404}
   m_HandFacingAwayTolerance: 75
+  m_AimOffset: {x: 0.03, y: 0.02, z: 0}
 --- !u!114 &3612685328802573908
 MonoBehaviour:
   m_ObjectHideFlags: 0
