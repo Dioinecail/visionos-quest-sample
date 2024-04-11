@@ -23,15 +23,18 @@ namespace Project.Hands
             }
         }
 
+        public float CurrentValue => m_ThumbDirection;
+        public float RotationThreshold => m_ThumbFingerDirectionThreshold;
+        public HandJointPose PalmPose => m_PalmPose;
+
         [SerializeField] private HandPoseProvider m_HandPoseProvider;
         [SerializeField] private AdaptiveRayInteractor m_TargetRayInteractor;
-        [SerializeField] private GameObject m_TeleportControlsVisual;
         [SerializeField, Tooltip("Threshold for the index finger pointing outwards")]
         private float m_IndexFingerDirectionThreshold = 0.65f;
         [SerializeField, Tooltip("Threshold for the rest of the fingers to point inwards")]
         private float m_OtherFingersDirectionThreshold = -0.25f;
-        [SerializeField, Tooltip("Threshold for the thumb finger, passing this threshold activates the teleport")]
-        private float m_ThumbFingerDirectionThreshold = -0.3f;
+        [SerializeField, Range(0f, 90f), Tooltip("Threshold for the thumb finger angle, passing this threshold activates the teleport")]
+        private float m_ThumbFingerDirectionThreshold = 0.3f;
         [SerializeField] private float m_DirectionLerpSpeed = 0.25f;
 
         [SerializeField] private InputActionProperty m_ActivateTeleportAction;
@@ -47,7 +50,8 @@ namespace Project.Hands
         private float m_RingDirection;
         private float m_PinkyDirection;
         private float m_ThumbDirection;
-        private LineRenderer m_TeleportControlsLine;
+        private float m_ThumbDirectionThresholdDot;
+        private HandJointPose m_PalmPose;
 
 
 
@@ -55,18 +59,17 @@ namespace Project.Hands
         {
             m_TargetRayActivateTeleportInput = m_TargetRayInteractor.selectInput;
             m_TargetRayInvokeTeleportInput = m_TargetRayInteractor.activateInput;
-            m_TeleportControlsLine = m_TeleportControlsVisual.GetComponent<LineRenderer>();
+            m_ThumbDirectionThresholdDot = Vector3.Dot(Vector3.up, Quaternion.Euler(0f, 0f, m_ThumbFingerDirectionThreshold) * Vector3.up);
         }
 
         private void Update()
         {
-            var isFoundFingers = m_HandPoseProvider.TryGetJoint(TrackedHandJoint.Palm, out var palmPose);
+            var isFoundFingers = m_HandPoseProvider.TryGetJoint(TrackedHandJoint.Palm, out m_PalmPose);
 
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.IndexIntermediate, palmPose, out var indexDirection);
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.MiddleIntermediate, palmPose, out var middleDirection);
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.RingIntermediate, palmPose, out var ringDirection);
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.LittleIntermediate, palmPose, out var pinkyDirection);
-            isFoundFingers &= m_HandPoseProvider.TryGetJoint(TrackedHandJoint.ThumbTip, out var thumbTipPose);
+            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.IndexIntermediate, m_PalmPose, out var indexDirection);
+            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.MiddleIntermediate, m_PalmPose, out var middleDirection);
+            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.RingIntermediate, m_PalmPose, out var ringDirection);
+            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.LittleIntermediate, m_PalmPose, out var pinkyDirection);
             isFoundFingers &= TryGetThumbDirection(out var thumbDirection);
 
             if (!isFoundFingers)
@@ -95,14 +98,10 @@ namespace Project.Hands
 
             if(isTeleportActive)
             {
-                m_TargetRayInteractor.gameObject.SetActive(true);
-                m_TeleportControlsVisual.SetActive(true);
+                State = true;
             }
 
-            m_TeleportControlsLine.SetPosition(0, m_TeleportControlsVisual.transform.position);
-            m_TeleportControlsLine.SetPosition(1, thumbTipPose.Position);
-
-            isTeleportActive &= !(m_ThumbDirection <= (m_TeleportInvokedLastFrame ? m_ThumbFingerDirectionThreshold - 0.1f : m_ThumbFingerDirectionThreshold));
+            isTeleportActive &= !(m_ThumbDirection >= (m_TeleportInvokedLastFrame ? m_ThumbDirectionThresholdDot + 0.1f : m_ThumbDirectionThresholdDot));
 
             if(wasTeleportActive)
             {
@@ -115,8 +114,7 @@ namespace Project.Hands
 
             if (!m_TeleportWasActiveLastFrame)
             {
-                m_TargetRayInteractor.gameObject.SetActive(false);
-                m_TeleportControlsVisual.SetActive(false);
+                State = false;
             }
 
             m_TeleportWasActiveLastFrame = isTeleportActive;
@@ -147,7 +145,7 @@ namespace Project.Hands
 
             if (gotData)
             {
-                var palmDirection = palmPose.Up;
+                var palmDirection = -palmPose.Up;
                 var fingerDirection = fingerPose.Forward;
 
                 direction = Vector3.Dot(fingerDirection, palmDirection);
