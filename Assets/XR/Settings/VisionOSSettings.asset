@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: VisionOSSettings
   m_EditorClassIdentifier: 
   m_AppMode: 0
-  m_HandsTrackingUsageDescription: 
-  m_WorldSensingUsageDescription: 
-  m_RuntimeSettings: {fileID: 0}
+  m_HandsTrackingUsageDescription: Hands tracking is used to interact with the 3D
+    environment
+  m_WorldSensingUsageDescription: World sensing is used to position user within the
+    3D environment
+  m_RuntimeSettings: {fileID: 11400000, guid: 969896901e259384190460fddfca8929, type: 2}
   m_UpperLimbVisibility: 0
   m_FoveatedRendering: 1
   m_IL2CPPLargeExeWorkaround: 0
