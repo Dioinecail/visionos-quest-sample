@@ -49,7 +49,7 @@ namespace Project.Hands
         private void OnEnable()
         {
             m_TurnValueReader = m_TargetHand == Handedness.Left ? m_TargetTurnProvider.leftHandTurnInput : m_TargetTurnProvider.rightHandTurnInput;
-            m_RotationThresholdDot = Vector3.Dot(Vector3.up, Quaternion.Euler(0f, 0f, m_RotationThreshold) * Vector3.up);
+            m_RotationThresholdDot = 1f - Vector3.Dot(Vector3.up, Quaternion.Euler(0f, 0f, m_RotationThreshold) * Vector3.up);
         }
 
         private void Update()
@@ -65,22 +65,25 @@ namespace Project.Hands
             m_MiddleDirection = Mathf.Lerp(m_MiddleDirection, middleDirection, m_DirectionLerpSpeed);
             m_RingDirection = Mathf.Lerp(m_RingDirection, ringDirection, m_DirectionLerpSpeed);
             m_PinkyDirection = Mathf.Lerp(m_PinkyDirection, pinkyDirection, m_DirectionLerpSpeed);
-            m_PalmDirection = Mathf.Lerp(m_PalmDirection, Vector3.Dot(Vector3.up, palmPose.Up), m_DirectionLerpSpeed);
+            m_PalmDirection = Mathf.Lerp(m_PalmDirection, Camera.main.transform.InverseTransformDirection(palmPose.Forward).x, m_DirectionLerpSpeed);
 
-            if (!isFoundFingers)
+            if (!isFoundFingers || !(Vector3.Dot(Vector3.up, palmPose.Up) < -0.5f ))
             {
                 m_IndexDirection
                     = m_MiddleDirection
                     = m_RingDirection
                     = m_PinkyDirection
                     = m_PalmDirection = 0f;
+
+                m_RotationControls.SetActive(false);
+                m_TurnValueReader.manualValue = Vector2.zero;
                 return;
             }
 
-            var isRotationGestureActive = m_IndexDirection < m_GeneralFingersThreshold
-                && m_MiddleDirection < m_GeneralFingersThreshold
-                && m_RingDirection < m_GeneralFingersThreshold
-                && m_PinkyDirection < m_GeneralFingersThreshold;
+            var isRotationGestureActive = m_IndexDirection > m_GeneralFingersThreshold
+                && m_MiddleDirection > m_GeneralFingersThreshold
+                && m_RingDirection > m_GeneralFingersThreshold
+                && m_PinkyDirection > m_GeneralFingersThreshold;
 
             m_RotationControls.SetActive(isRotationGestureActive);
 
@@ -88,7 +91,7 @@ namespace Project.Hands
             {
                 if(Mathf.Abs(m_PalmDirection) > m_RotationThresholdDot)
                 {
-                    m_TurnValueReader.manualValue = new Vector2(-m_PalmDirection, 0f);
+                    m_TurnValueReader.manualValue = new Vector2(m_PalmDirection, 0f);
                 }
                 else
                 {

@@ -49,10 +49,10 @@ namespace Project.Hands
             {
                 var angle = (i / (float)m_LineQuality) * 360f;
 
-                positions[i] = m_VisualsRoot.TransformPoint(Quaternion.Euler(0f, 0f, angle) * Vector3.up * m_Radius);
+                positions[i] = Quaternion.Euler(0f, 0f, angle) * Vector3.up * m_Radius;
             }
 
-            var currentAngle = Mathf.LerpUnclamped(0f, 90f, m_TargetAction.CurrentValue);
+            var currentAngle = Mathf.LerpUnclamped(0f, 90f, -m_TargetAction.CurrentValue);
             var currentValueDirection = Quaternion.Euler(0f, 0f, currentAngle) * Vector3.up * m_Radius;
 
             m_Direction.SetPosition(1, currentValueDirection);

@@ -1,4 +1,5 @@
 using Project.Core;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,6 +11,21 @@ namespace Project.Hands
     // Based on ArticulatedHandController from MRTK
     public class HandSelectAction : MonoBehaviour
     {
+        public event Action<bool> OnStateChanged;
+
+        public bool State
+        {
+            get => m_State;
+            set
+            {
+                if (m_State == value)
+                    return;
+
+                m_State = value;
+                OnStateChanged?.Invoke(m_State);
+            }
+        }
+
         [SerializeField] private HandJointPoseProvider m_HandPoseProvider;
         [SerializeField] private AdaptiveRayInteractor m_TargetRayInteractor;
         [SerializeField] private float m_PinchOpenThreshold = 0.75f;
@@ -19,6 +35,7 @@ namespace Project.Hands
         [SerializeField] private InputActionProperty m_SelectAction;
         [SerializeField] private InputActionProperty m_UIPressAction;
 
+        private bool m_State;
         private bool m_PinchedLastFrame;
         private XRInputButtonReader m_TargetRaySelectInput;
         private XRInputButtonReader m_TargetRayActivateInput;
