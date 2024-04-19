@@ -1,11 +1,13 @@
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals;
 
 namespace Project.Hands
 {
     public class HandSelectActionVisuals : MonoBehaviour
     {
         [SerializeField] private HandSelectAction m_TargetAction;
-        [SerializeField] private GameObject m_RayLine;
+        [SerializeField] private XRInteractorLineVisual m_RayLine;
+        [SerializeField] private LineRenderer m_Line;
 
 
 
@@ -16,7 +18,8 @@ namespace Project.Hands
 
         private void HandleStateChanged(bool state)
         {
-            m_RayLine.SetActive(state);
+            m_RayLine.enabled = state;
+            m_Line.enabled = state;
         }
     }
 }

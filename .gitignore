@@ -70,4 +70,13 @@ Assets/Bakery/_tempScene/LightingData.asset.meta
 
 # Bundles Directory
 Bundles/
-!Assets/Bundles/
+Assets/Bundles.meta
+Assets/Bundles/
+Assets/Bakery.meta
+Assets/Bakery/
+Assets/BakeryLightmaps.meta
+Assets/BakeryLightmaps/
+Assets/Editor.meta
+Assets/Editor/
+Assets/Settings/BakeryProjectSettings.asset
+Assets/Settings/BakeryProjectSettings.asset.meta

@@ -1,8 +1,10 @@
 using Project.Core;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit.Inputs.Readers;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 namespace Project.Hands
 {
@@ -23,156 +25,89 @@ namespace Project.Hands
             }
         }
 
-        public float CurrentValue => m_ThumbDirection;
-        public float RotationThreshold => m_ThumbFingerDirectionThreshold;
-        public HandJointPose PalmPose => m_PalmPose;
+        public bool HasValidTargets => m_ValidTargets.Count > 0;
 
         [SerializeField] private HandPoseProvider m_HandPoseProvider;
         [SerializeField] private AdaptiveRayInteractor m_TargetRayInteractor;
-        [SerializeField, Tooltip("Threshold for the index finger pointing outwards")]
-        private float m_IndexFingerDirectionThreshold = 0.65f;
-        [SerializeField, Tooltip("Threshold for the rest of the fingers to point inwards")]
-        private float m_OtherFingersDirectionThreshold = -0.25f;
-        [SerializeField, Range(0f, 90f), Tooltip("Threshold for the thumb finger angle, passing this threshold activates the teleport")]
-        private float m_ThumbFingerDirectionThreshold = 0.3f;
         [SerializeField] private float m_PalmUpThreshold = 0.25f;
         [SerializeField] private float m_DirectionLerpSpeed = 0.25f;
         [SerializeField] private float m_PinchOpenThreshold = 0.75f;
         [SerializeField] private float m_PinchClosedThreshold = 0.25f;
         [SerializeField] private float m_HandRaiseCameraFov = 45f;
+        [SerializeField] private float m_PinchThreshold = 0.7f;
+        [SerializeField] private float m_PinchSmoothing = 0.25f;
 
         [SerializeField] private InputActionProperty m_ActivateTeleportAction;
         [SerializeField] private InputActionProperty m_InvokeTeleportAction;
 
         private XRInputButtonReader m_TargetRayActivateTeleportInput;
-        private XRInputButtonReader m_TargetRayInvokeTeleportInput;
-        private bool m_TeleportWasActiveLastFrame;
         private bool m_TeleportInvokedLastFrame;
         private bool m_State = true;
-        private float m_IndexDirection;
-        private float m_MiddleDirection;
-        private float m_RingDirection;
-        private float m_PinkyDirection;
-        private float m_ThumbDirection;
-        private float m_ThumbDirectionThresholdDot;
+        private float m_PinchAmount;
         private HandJointPose m_PalmPose;
+        private List<IXRInteractable> m_ValidTargets = new List<IXRInteractable>();
 
 
 
         private void OnEnable()
         {
             m_TargetRayActivateTeleportInput = m_TargetRayInteractor.selectInput;
-            m_TargetRayInvokeTeleportInput = m_TargetRayInteractor.activateInput;
-            m_ThumbDirectionThresholdDot = Vector3.Dot(Vector3.up, Quaternion.Euler(0f, 0f, m_ThumbFingerDirectionThreshold) * Vector3.up);
         }
 
         private void Update()
         {
-            var isFoundFingers = m_HandPoseProvider.TryGetJoint(TrackedHandJoint.Palm, out m_PalmPose);
+            m_TargetRayInteractor.GetValidTargets(m_ValidTargets);
 
-            if (isFoundFingers && !CheckPalmFacingUpwards(m_PalmPose))
+            var isFoundFingers = TryGetPinchProgress(
+                out bool isPinchReady,
+                out bool isPinching,
+                out float pinchAmount
+            );
+
+            isFoundFingers &= m_HandPoseProvider.TryGetJoint(TrackedHandJoint.Palm, out var palmPose);
+
+            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.IndexTip, palmPose, out var indexDirection);
+            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.MiddleTip, palmPose, out var middleDirection);
+            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.RingTip, palmPose, out var ringDirection);
+            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.LittleTip, palmPose, out var pinkyDirection);
+
+            m_PinchAmount = Mathf.Lerp(m_PinchAmount, pinchAmount, m_PinchSmoothing);
+
+            isFoundFingers &= m_HandPoseProvider.TryGetPalmFacingAway(out var isPalmFacingAway);
+
+            var isHandFist = false;
+
+            if(isFoundFingers)
             {
-                m_MiddleDirection
-                    = m_RingDirection
-                    = m_PinkyDirection = 0f;
+                isHandFist = indexDirection < m_PalmUpThreshold
+                    && middleDirection < m_PalmUpThreshold
+                    && ringDirection < m_PalmUpThreshold
+                    && pinkyDirection < m_PalmUpThreshold;
+            }
+
+            if (!HasValidTargets 
+                || !isFoundFingers 
+                || !isPalmFacingAway 
+                || isHandFist)
+            {
                 State = false;
                 return;
             }
 
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.IndexIntermediate, m_PalmPose, out var indexDirection);
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.MiddleIntermediate, m_PalmPose, out var middleDirection);
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.RingIntermediate, m_PalmPose, out var ringDirection);
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.LittleIntermediate, m_PalmPose, out var pinkyDirection);
-            isFoundFingers &= TryGetThumbDirection(out var thumbDirection);
-            isFoundFingers &= TryGetPinchProgress(out var isReadyToPinch, out var isPinching, out var pinchAmount);
+            var isPinched = m_PinchAmount >= (m_TeleportInvokedLastFrame ? m_PinchThreshold : 0.95f);
 
-            if (!isFoundFingers)
+            // Only send data to teleport value reader if teleport is pre-activated
+            m_TargetRayActivateTeleportInput.QueueManualState(isPinched,
+                m_PinchAmount,
+                isPinched && !m_TeleportInvokedLastFrame,
+                !isPinched && m_TeleportInvokedLastFrame);
+
+            m_TeleportInvokedLastFrame = isPinched;
+
+            if (HasValidTargets)
             {
-                m_MiddleDirection
-                    = m_RingDirection
-                    = m_PinkyDirection = 0f;
-                State = false;
-                return;
+                State = !isPinched;
             }
-
-            m_MiddleDirection = Mathf.Lerp(m_MiddleDirection, middleDirection, m_DirectionLerpSpeed);
-            m_RingDirection = Mathf.Lerp(m_RingDirection, ringDirection, m_DirectionLerpSpeed);
-            m_PinkyDirection = Mathf.Lerp(m_PinkyDirection, pinkyDirection, m_DirectionLerpSpeed);
-
-            var isTeleportActive = m_MiddleDirection < m_OtherFingersDirectionThreshold
-                && m_RingDirection < m_OtherFingersDirectionThreshold
-                && m_PinkyDirection < m_OtherFingersDirectionThreshold;
-
-            // display the teleport ray visuals but not activate the teleport
-            var wasTeleportActive = isTeleportActive;
-
-            if (isTeleportActive)
-            {
-                State = true;
-            }
-
-            isTeleportActive &= !(pinchAmount >= (m_TeleportInvokedLastFrame ? 0.9f : 1.0f));
-
-            if (wasTeleportActive)
-            {
-                // Only send data to teleport value reader if teleport is pre-activated
-                m_TargetRayActivateTeleportInput.QueueManualState(isTeleportActive,
-                    pinchAmount,
-                    isTeleportActive && !m_TeleportWasActiveLastFrame,
-                    !isTeleportActive && m_TeleportWasActiveLastFrame);
-            }
-
-            if (!m_TeleportWasActiveLastFrame)
-            {
-                State = false;
-            }
-
-            m_TeleportWasActiveLastFrame = isTeleportActive;
-        }
-
-        private bool CheckPalmFacingUpwards(HandJointPose m_PalmPose)
-        {
-            var upVector = Vector3.up;
-            var palmInverseUp = -m_PalmPose.Up;
-
-            return Vector3.Dot(palmInverseUp, upVector) > m_PalmUpThreshold;
-        }
-
-        private bool TryGetFingerDirection(TrackedHandJoint finger, HandJointPose palmRef, out float direction)
-        {
-            bool gotData = m_HandPoseProvider.TryGetJoint(finger, out var fingerPose);
-
-            if (gotData)
-            {
-                var cameraForward = palmRef.Forward;
-                var fingerDirection = fingerPose.Forward;
-
-                direction = Vector3.Dot(fingerDirection, cameraForward);
-
-                return true;
-            }
-
-            direction = 0f;
-            return false;
-        }
-
-        private bool TryGetThumbDirection(out float direction)
-        {
-            bool gotData = m_HandPoseProvider.TryGetJoint(TrackedHandJoint.ThumbProximal, out var fingerPose);
-            gotData &= m_HandPoseProvider.TryGetJoint(TrackedHandJoint.Palm, out var palmPose);
-
-            if (gotData)
-            {
-                var palmDirection = -palmPose.Up;
-                var fingerDirection = fingerPose.Forward;
-
-                direction = Vector3.Dot(fingerDirection, palmDirection);
-
-                return true;
-            }
-
-            direction = 0f;
-            return false;
         }
 
         private bool TryGetPinchProgress(out bool isReadyToPinch, out bool isPinching, out float pinchAmount)
@@ -216,6 +151,23 @@ namespace Project.Hands
             pinchAmount = 1.0f - Mathf.InverseLerp(m_PinchClosedThreshold, m_PinchOpenThreshold, normalizedPinch);
 
             return gotData;
+        }
+
+        private bool TryGetFingerDirection(TrackedHandJoint finger, HandJointPose palmPose, out float direction)
+        {
+            var isValid = m_HandPoseProvider.TryGetJoint(finger, out var fingerPose);
+
+            if (!isValid)
+            {
+                direction = 0f;
+                return false;
+            }
+
+            var palmForward = palmPose.Forward;
+            var fingerForward = fingerPose.Forward;
+
+            direction = Vector3.Dot(fingerForward, palmForward);
+            return true;
         }
     }
 }

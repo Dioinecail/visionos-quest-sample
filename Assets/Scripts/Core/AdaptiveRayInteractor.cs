@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Inputs;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 namespace Project.Core
@@ -74,6 +76,10 @@ namespace Project.Core
 
         private void Update()
         {
+            var validTargets = new List<IXRInteractable>();
+
+            GetValidTargets(validTargets);
+
             if (m_ActiveAimPoseProvider != null && m_ActiveAimPoseProvider.TryGetPose(out var pose))
             {
                 m_Transform.SetPositionAndRotation(pose.position, pose.rotation);

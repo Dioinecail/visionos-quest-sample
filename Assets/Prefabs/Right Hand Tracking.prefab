@@ -365,6 +365,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_HandPoseProvider: {fileID: 133509338880877498}
   m_TargetRayInteractor: {fileID: 0}
+  m_TeleportAction: {fileID: 6331412046316201350}
   m_PinchOpenThreshold: 0.75
   m_PinchClosedThreshold: 0.25
   m_HandRaiseCameraFov: 45
@@ -408,11 +409,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_HandPoseProvider: {fileID: 3972231384003196134}
   m_TargetRayInteractor: {fileID: 0}
-  m_TeleportControlsVisual: {fileID: 0}
-  m_IndexFingerDirectionThreshold: 0.65
-  m_OtherFingersDirectionThreshold: -0.25
-  m_ThumbFingerDirectionThreshold: -0.45
+  m_PalmUpThreshold: 0.25
   m_DirectionLerpSpeed: 0.25
+  m_PinchOpenThreshold: 0.75
+  m_PinchClosedThreshold: 0.25
+  m_HandRaiseCameraFov: 45
   m_ActivateTeleportAction:
     m_UseReference: 1
     m_Action:

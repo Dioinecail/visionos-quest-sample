@@ -1,9 +1,11 @@
+using Project.Gaze;
 using UnityEngine;
 
 namespace Project.Hands
 {
     public class HandAimProvider : HandPoseProvider
     {
+        [SerializeField] private GazePoseProvider m_GazePoseProvider;
         [SerializeField] private Vector3 m_AimOffset;
 
         private HandRay m_HandRay = new HandRay(0.02f);
@@ -14,6 +16,11 @@ namespace Project.Hands
 
         public override bool TryGetPose(out Pose pose)
         {
+            if(m_GazePoseProvider.IsGazeReady)
+            {
+                return m_GazePoseProvider.TryGetPose(out pose);
+            }
+
             bool poseRetrieved = true;
             poseRetrieved &= TryGetJoint(TrackedHandJoint.IndexProximal, out m_Knuckle);
             poseRetrieved &= TryGetJoint(TrackedHandJoint.Palm, out m_Palm);

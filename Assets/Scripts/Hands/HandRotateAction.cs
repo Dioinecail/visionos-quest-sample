@@ -23,123 +23,120 @@ namespace Project.Hands
                 OnStateChanged?.Invoke(m_State);
             }
         }
-        public float CurrentValue => m_PalmDirection;
-        public float RotationThreshold => m_RotationThreshold;
+
+        public float DistanceToActivate => m_DistanceToActivate;
+        public Vector3 OriginPositionWorldSpace => Camera.main.transform.TransformPoint(m_ActionOrigin);
 
         [SerializeField] private Handedness m_TargetHand;
         [SerializeField] private HandPoseProvider m_HandPoseProvider;
-        [SerializeField] private GameObject m_RotationControls;
         [SerializeField] private SnapTurnProvider m_TargetTurnProvider;
-        [SerializeField] private float m_GeneralFingersThreshold = -0.25f;
-        [SerializeField, Range(0f, 90f)] private float m_RotationThreshold = 0.25f;
+        [SerializeField] private float m_FingersDirectionThreshold = -0.65f;
+        [SerializeField] private float m_DistanceToActivate = 0.25f;
         [SerializeField] private float m_DirectionLerpSpeed = 0.25f;
+        [SerializeField] private float m_PinchOpenThreshold = 0.75f;
+        [SerializeField] private float m_PinchClosedThreshold = 0.25f;
+        [SerializeField] private float m_HandRaiseCameraFov = 45f;
+        [SerializeField] private float m_DirectionSmoothing = 0.25f;
 
         private XRInputValueReader<Vector2> m_TurnValueReader;
 
-        private float m_RotationThresholdDot;
         private bool m_State;
+        private bool m_WasPalmReadyLastFrame;
+        private bool m_IsActionExecuted;
+        private Vector3 m_ActionOrigin;
+        private Vector3 m_ActionPosition;
+
         private float m_IndexDirection;
         private float m_MiddleDirection;
         private float m_RingDirection;
         private float m_PinkyDirection;
-        private float m_PalmDirection;
 
 
 
         private void OnEnable()
         {
             m_TurnValueReader = m_TargetHand == Handedness.Left ? m_TargetTurnProvider.leftHandTurnInput : m_TargetTurnProvider.rightHandTurnInput;
-            m_RotationThresholdDot = 1f - Vector3.Dot(Vector3.up, Quaternion.Euler(0f, 0f, m_RotationThreshold) * Vector3.up);
         }
 
         private void Update()
         {
-            var isFoundFingers = m_HandPoseProvider.TryGetJoint(TrackedHandJoint.Palm, out var palmPose);
+            bool gotData = m_HandPoseProvider.TryGetJoint(TrackedHandJoint.Palm, out var palmPose);
 
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.IndexIntermediate, palmPose, out var indexDirection);
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.MiddleIntermediate, palmPose, out var middleDirection);
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.RingIntermediate, palmPose, out var ringDirection);
-            isFoundFingers &= TryGetFingerDirection(TrackedHandJoint.LittleIntermediate, palmPose, out var pinkyDirection);
+            gotData &= TryGetFingerDirection(TrackedHandJoint.IndexTip, palmPose, out var indexDirection);
+            gotData &= TryGetFingerDirection(TrackedHandJoint.MiddleTip, palmPose, out var middleDirection);
+            gotData &= TryGetFingerDirection(TrackedHandJoint.RingTip, palmPose, out var ringDirection);
+            gotData &= TryGetFingerDirection(TrackedHandJoint.LittleTip, palmPose, out var pinkyDirection);
 
-            m_IndexDirection = Mathf.Lerp(m_IndexDirection, indexDirection, m_DirectionLerpSpeed);
-            m_MiddleDirection = Mathf.Lerp(m_MiddleDirection, middleDirection, m_DirectionLerpSpeed);
-            m_RingDirection = Mathf.Lerp(m_RingDirection, ringDirection, m_DirectionLerpSpeed);
-            m_PinkyDirection = Mathf.Lerp(m_PinkyDirection, pinkyDirection, m_DirectionLerpSpeed);
-            m_PalmDirection = Mathf.Lerp(m_PalmDirection, Camera.main.transform.InverseTransformDirection(palmPose.Forward).x, m_DirectionLerpSpeed);
-
-            if (!isFoundFingers || !(Vector3.Dot(Vector3.up, palmPose.Up) < -0.5f ))
+            if (!gotData)
             {
-                m_IndexDirection
-                    = m_MiddleDirection
-                    = m_RingDirection
-                    = m_PinkyDirection
-                    = m_PalmDirection = 0f;
-
-                m_RotationControls.SetActive(false);
+                State = false;
                 m_TurnValueReader.manualValue = Vector2.zero;
+                m_WasPalmReadyLastFrame = false;
+                m_IndexDirection = 0f;
+                m_MiddleDirection = 0f;
+                m_RingDirection = 0f;
+                m_PinkyDirection = 0f;
+
                 return;
             }
 
-            var isRotationGestureActive = m_IndexDirection > m_GeneralFingersThreshold
-                && m_MiddleDirection > m_GeneralFingersThreshold
-                && m_RingDirection > m_GeneralFingersThreshold
-                && m_PinkyDirection > m_GeneralFingersThreshold;
+            m_IndexDirection = Mathf.Lerp(m_IndexDirection, indexDirection, m_DirectionSmoothing);
+            m_MiddleDirection = Mathf.Lerp(m_MiddleDirection, middleDirection, m_DirectionSmoothing);
+            m_RingDirection = Mathf.Lerp(m_RingDirection, ringDirection, m_DirectionSmoothing);
+            m_PinkyDirection = Mathf.Lerp(m_PinkyDirection, pinkyDirection, m_DirectionSmoothing);
 
-            m_RotationControls.SetActive(isRotationGestureActive);
+            var isPalmReady = m_IndexDirection < m_FingersDirectionThreshold
+                && m_MiddleDirection < m_FingersDirectionThreshold
+                && m_RingDirection < m_FingersDirectionThreshold
+                && m_PinkyDirection < m_FingersDirectionThreshold;
 
-            if(isRotationGestureActive)
+            State = (isPalmReady && !m_IsActionExecuted);
+
+            if (isPalmReady)
             {
-                if(Mathf.Abs(m_PalmDirection) > m_RotationThresholdDot)
+                if(!m_WasPalmReadyLastFrame)
+                    m_ActionOrigin = Camera.main.transform.InverseTransformPoint(palmPose.Position);
+
+                m_ActionPosition = Camera.main.transform.InverseTransformPoint(palmPose.Position);
+
+                var delta = m_ActionPosition - m_ActionOrigin;
+
+                if (Mathf.Abs(delta.x) > m_DistanceToActivate)
                 {
-                    m_TurnValueReader.manualValue = new Vector2(m_PalmDirection, 0f);
+                    m_IsActionExecuted = true;
+                    m_TurnValueReader.manualValue = new Vector2(delta.x, 0f);
                 }
                 else
-                {
                     m_TurnValueReader.manualValue = Vector2.zero;
-                }
             }
             else
             {
                 m_TurnValueReader.manualValue = Vector2.zero;
             }
+
+            m_WasPalmReadyLastFrame = isPalmReady;
+
+            if(m_IsActionExecuted && !m_WasPalmReadyLastFrame && !isPalmReady)
+            {
+                m_IsActionExecuted = false;
+            }
         }
 
-        private bool TryGetFingerDirection(TrackedHandJoint finger, HandJointPose palmRef, out float direction)
+        private bool TryGetFingerDirection(TrackedHandJoint finger, HandJointPose palmPose, out float direction)
         {
-            bool gotData = m_HandPoseProvider.TryGetJoint(finger, out var fingerPose);
+            var isValid = m_HandPoseProvider.TryGetJoint(finger, out var fingerPose);
 
-            if (gotData)
+            if (!isValid)
             {
-                var cameraForward = palmRef.Forward;
-                var fingerDirection = fingerPose.Forward;
-
-                direction = Vector3.Dot(fingerDirection, cameraForward);
-
-                return true;
+                direction = 0f;
+                return false;
             }
 
-            direction = 0f;
-            return false;
-        }
+            var palmForward = palmPose.Forward;
+            var fingerForward = fingerPose.Forward;
 
-        private bool TryGetThumbDirection(out float direction)
-        {
-            bool gotData = m_HandPoseProvider.TryGetJoint(TrackedHandJoint.ThumbTip, out var fingerPose);
-            gotData &= m_HandPoseProvider.TryGetJoint(TrackedHandJoint.Palm, out var palmPose);
-
-            if (gotData)
-            {
-                var cameraToPalm = (palmPose.Position - Camera.main.transform.position).normalized;
-                var thumbUp = fingerPose.Forward;
-                var thumbCross = Vector3.Cross(cameraToPalm, Vector3.up);
-
-                direction = Vector3.Dot(thumbUp, thumbCross);
-
-                return true;
-            }
-
-            direction = 0f;
-            return false;
+            direction = Vector3.Dot(fingerForward, palmForward);
+            return true;
         }
     }
 }

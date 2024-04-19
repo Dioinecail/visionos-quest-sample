@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit.Inputs.Readers;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 namespace Project.Hands
 {
@@ -26,11 +27,15 @@ namespace Project.Hands
             }
         }
 
+        public bool HasValidTargets => m_HasValidTargets;
+
         [SerializeField] private HandJointPoseProvider m_HandPoseProvider;
         [SerializeField] private AdaptiveRayInteractor m_TargetRayInteractor;
+        [SerializeField] private HandTeleportAction m_TeleportAction;
         [SerializeField] private float m_PinchOpenThreshold = 0.75f;
         [SerializeField] private float m_PinchClosedThreshold = 0.25f;
         [SerializeField] private float m_HandRaiseCameraFov = 45f;
+        [SerializeField] private float m_PinchThreshold = 0.7f;
 
         [SerializeField] private InputActionProperty m_SelectAction;
         [SerializeField] private InputActionProperty m_UIPressAction;
@@ -40,6 +45,7 @@ namespace Project.Hands
         private XRInputButtonReader m_TargetRaySelectInput;
         private XRInputButtonReader m_TargetRayActivateInput;
         private XRInputButtonReader m_TargetRayUISelectInput;
+        private bool m_HasValidTargets;
 
 
 
@@ -52,11 +58,21 @@ namespace Project.Hands
 
         void Update()
         {
-            bool gotPinchData = TryGetPinchProgress(
-                out bool isPinchReady,
-                out bool isPinching,
-                out float pinchAmount
-            );
+            m_HasValidTargets = m_TargetRayInteractor.TryGetCurrentUIRaycastResult(out var _, out var _);
+            m_HandPoseProvider.TryGetPalmFacingAway(out var isPalmFacingAway);
+
+            bool gotPinchData = TryGetPinchProgress(out var _, out var _, out float pinchAmount);
+
+            if (!HasValidTargets || !gotPinchData || !isPalmFacingAway || m_TeleportAction.HasValidTargets)
+            {
+                State = false;
+                return;
+            }
+
+            if (HasValidTargets)
+            {
+                State = true;
+            }
 
             // If we got pinch data, write it into our select interaction state.
             if (gotPinchData)
@@ -66,7 +82,7 @@ namespace Project.Hands
                 // hand interaction profile(s) across vendors.
 
                 // Debounce the polyfill pinch action value.
-                bool isPinched = pinchAmount >= (m_PinchedLastFrame ? 0.9f : 1.0f);
+                bool isPinched = pinchAmount >= (m_PinchedLastFrame ? m_PinchThreshold : 1.0f);
 
                 // Inject our own polyfilled state into the m_TargetRaySelectInput if no other control is bound.
                 m_TargetRaySelectInput.QueueManualState(isPinched,
