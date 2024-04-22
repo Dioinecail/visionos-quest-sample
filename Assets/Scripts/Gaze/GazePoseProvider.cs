@@ -15,6 +15,7 @@ namespace Project.Gaze
         public bool IsGazeReady => m_IsActive;
 
         private bool m_IsActive;
+        [SerializeField] private TMPro.TMP_Text m_Debug;
 
 #if UNITY_EDITOR || UNITY_VISIONOS
         PointerInput m_PointerInput;
@@ -30,12 +31,16 @@ namespace Project.Gaze
             {
                 aimPose = new Pose(primaryTouch.startRayOrigin, primaryTouch.startRayRotation);
 
+                m_Debug.text = $"aimPose: {aimPose.position}";
+
                 return true;
             }
 
             if (active)
             {
                 aimPose = new Pose(primaryTouch.inputDevicePosition, primaryTouch.inputDeviceRotation);
+
+                m_Debug.text = $"aimPose: {aimPose.position}";
 
                 return true;
             }

@@ -1,5 +1,6 @@
 using Project.Gaze;
 using UnityEngine;
+using UnityEngine.XR.Hands;
 
 namespace Project.Hands
 {
@@ -7,6 +8,7 @@ namespace Project.Hands
     {
         [SerializeField] private GazePoseProvider m_GazePoseProvider;
         [SerializeField] private Vector3 m_AimOffset;
+        [SerializeField] protected Handedness m_TargetHand;
 
         private HandRay m_HandRay = new HandRay(0.02f);
         private HandJointPose m_Knuckle;

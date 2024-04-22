@@ -11,7 +11,6 @@ namespace Project.Core
     public abstract class PoseProvider : MonoBehaviour
     {
         [SerializeField] protected InputMode m_TargetMode;
-        [SerializeField] protected Handedness m_TargetHand;
 
         public InputMode TargetMode => m_TargetMode;
 
