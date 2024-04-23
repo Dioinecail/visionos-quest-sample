@@ -49,6 +49,13 @@ namespace Project.Gaze
             return false;
         }
 
+        private void Update()
+        {
+            var primaryTouch = m_PointerInput.Default.PrimaryPointer.ReadValue<VisionOSSpatialPointerState>();
+            m_Debug.text = $"primaryTouch.inputDevicePosition: '{primaryTouch.inputDevicePosition}' \nprimaryTouch.inputDeviceRotation: '{primaryTouch.inputDeviceRotation}'";
+
+        }
+
         void OnEnable()
         {
             m_PointerInput ??= new PointerInput();
