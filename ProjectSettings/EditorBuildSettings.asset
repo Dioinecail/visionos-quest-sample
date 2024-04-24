@@ -8,6 +8,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/DemoScene.unity
     guid: 319dafa5c80f29f428dc1e0d03f04177
+  - enabled: 0
+    path: Assets/Samples/Apple visionOS XR Plugin/1.1.6/VR Sample - URP/Scenes/Main.unity
+    guid: 59c040aa457144324b963233e912b06e
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 4086dfb31a803f44bbcf4bdc94eb7974,
       type: 2}

@@ -18,10 +18,12 @@ namespace Project.Hands
 
         public override bool TryGetPose(out Pose pose)
         {
-            if(m_GazePoseProvider.IsGazeReady)
+#if UNITY_VISIONOS
+            if (m_GazePoseProvider != null && m_GazePoseProvider.IsGazeReady)
             {
                 return m_GazePoseProvider.TryGetPose(out pose);
             }
+#endif
 
             bool poseRetrieved = true;
             poseRetrieved &= TryGetJoint(TrackedHandJoint.IndexProximal, out m_Knuckle);
