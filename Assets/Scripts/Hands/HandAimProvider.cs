@@ -18,12 +18,17 @@ namespace Project.Hands
 
         public override bool TryGetPose(out Pose pose)
         {
-#if UNITY_VISIONOS
-            if (m_GazePoseProvider != null && m_GazePoseProvider.IsGazeReady)
-            {
-                return m_GazePoseProvider.TryGetPose(out pose);
-            }
-#endif
+            // TOOD: make HandAimProvider work with gaze provider
+            // the problem right now is that VisionOSSpatialPointerState is only available when user "clicks"
+            // thus XRRayInteractable will be invalid at all times before user clicks
+            // and VisionOSSpatialPointerState will not be available fast enough for XRRayInteractable to work
+
+//#if UNITY_VISIONOS
+//            if (m_GazePoseProvider != null && m_GazePoseProvider.IsGazeReady)
+//            {
+//                return m_GazePoseProvider.TryGetPose(out pose);
+//            }
+//#endif
 
             bool poseRetrieved = true;
             poseRetrieved &= TryGetJoint(TrackedHandJoint.IndexProximal, out m_Knuckle);

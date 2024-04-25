@@ -9,11 +9,8 @@ namespace Project.Hands
 {
     public class AdaptiveHandSkeletonDriver : XRHandSkeletonDriver
     {
-        [SerializeField] private Transform m_CameraTransform;
-        [SerializeField] private TMPro.TMP_Text m_Debug;
-
-        private Dictionary<XRHandJointID, Pose> m_LastParentPoses = new Dictionary<XRHandJointID, Pose>();
-        private Dictionary<XRHandJointID, Pose> m_LastFingerPoses = new Dictionary<XRHandJointID, Pose>();
+        //private Dictionary<XRHandJointID, Pose> m_LastParentPoses = new Dictionary<XRHandJointID, Pose>();
+        //private Dictionary<XRHandJointID, Pose> m_LastFingerPoses = new Dictionary<XRHandJointID, Pose>();
 
 
 
@@ -71,19 +68,25 @@ namespace Project.Hands
                             var parentLocal = wristTransform.InverseTransformPoint(parentPose.position);
                             var fingerLocal = wristTransform.InverseTransformPoint(fingerJointPose.position);
 
-                            m_LastParentPoses[jointId] = new Pose(parentLocal, parentPose.rotation);
-                            m_LastFingerPoses[jointId] = new Pose(fingerLocal, fingerJointPose.rotation);
+                            // TODO: 
+                            // change caching of world space rotation to local rotation
+                            // because world space rotation will get messy 
+                            //m_LastParentPoses[jointId] = new Pose(parentLocal, parentPose.rotation);
+                            //m_LastFingerPoses[jointId] = new Pose(fingerLocal, fingerJointPose.rotation);
                         }
-                        else if (m_LastParentPoses.TryGetValue(jointId, out var parentCachedPose)
-                            && m_LastFingerPoses.TryGetValue(jointId, out var fingerCachedPose))
+                        else
                         {
-                            var parentWorld = wristTransform.TransformPoint(parentCachedPose.position);
-                            var fingerWorld = wristTransform.TransformPoint(fingerCachedPose.position);
+                            break;
 
-                            parentPose = new Pose(parentWorld, parentCachedPose.rotation);
-                            fingerJointPose = new Pose(fingerWorld, fingerCachedPose.rotation);
+                            // TODO: convert local position to worldspace position
+                            //var parentWorld = wristTransform.TransformPoint(parentCachedPose.position);
+                            //var fingerWorld = wristTransform.TransformPoint(fingerCachedPose.position);
 
-                            CalculateLocalTransformPose(parentPose, fingerJointPose, out jointLocalPose);
+                            //// change using world space rotation to local rotation
+                            //parentPose = new Pose(parentWorld, parentCachedPose.rotation);
+                            //fingerJointPose = new Pose(fingerWorld, fingerCachedPose.rotation);
+
+                            //CalculateLocalTransformPose(parentPose, fingerJointPose, out jointLocalPose);
                         }
 
                         // world pos world pos
@@ -102,29 +105,12 @@ namespace Project.Hands
             jointLocalPose.rotation = inverseParentRotation * jointPose.rotation;
         }
 
-        private void Update()
-        {
-            var joints = m_JointTransformReferences.Where(j => IsMetacarpal(j.xrHandJointID));
-
-            var sb = new System.Text.StringBuilder();
-
-            foreach (var joint in joints)
-            {
-                var p = joint.jointTransform.position;
-                var lp = joint.jointTransform.localPosition;
-
-                sb.AppendLine($"index: '{joint.xrHandJointID}' | pos: '{p}' | local(cm): '{lp * 10f}'");
-            }
-
-            m_Debug.text = sb.ToString();
-        }
-
-        private bool IsMetacarpal(XRHandJointID id)
-        {
-            return id == XRHandJointID.LittleMetacarpal
-            || id == XRHandJointID.RingMetacarpal
-            || id == XRHandJointID.MiddleMetacarpal
-            || id == XRHandJointID.IndexMetacarpal;
-        }
+        //private bool IsMetacarpal(XRHandJointID id)
+        //{
+        //    return id == XRHandJointID.LittleMetacarpal
+        //    || id == XRHandJointID.RingMetacarpal
+        //    || id == XRHandJointID.MiddleMetacarpal
+        //    || id == XRHandJointID.IndexMetacarpal;
+        //}
     }
 }

@@ -178,9 +178,9 @@ GameObject:
   - component: {fileID: 2726143015963839043}
   - component: {fileID: 3972231384003196134}
   - component: {fileID: 133509338880877498}
-  - component: {fileID: 5860815752527618934}
   - component: {fileID: 1187830607224204773}
   - component: {fileID: 6331412046316201350}
+  - component: {fileID: 2324585737323057118}
   m_Layer: 0
   m_Name: Right Hand Tracking
   m_TagString: Untagged
@@ -263,10 +263,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_TargetMode: 1
-  m_TargetHand: 2
-  m_HandSkeletonDriver: {fileID: 5860815752527618934}
+  m_HandSkeletonDriver: {fileID: 2324585737323057118}
   m_HandFacingAwayTolerance: 75
+  m_GazePoseProvider: {fileID: 0}
   m_AimOffset: {x: -0.03, y: 0.02, z: 0}
+  m_TargetHand: 2
 --- !u!114 &133509338880877498
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -280,11 +281,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_TargetMode: 1
-  m_TargetHand: 2
-  m_HandSkeletonDriver: {fileID: 5860815752527618934}
+  m_HandSkeletonDriver: {fileID: 2324585737323057118}
   m_HandFacingAwayTolerance: 75
   m_Joint: 0
---- !u!114 &5860815752527618934
+--- !u!114 &1187830607224204773
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -293,7 +293,99 @@ MonoBehaviour:
   m_GameObject: {fileID: 3133494152545806682}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07aaccfa1bc2417d8fbd0d9e2e102c2c, type: 3}
+  m_Script: {fileID: 11500000, guid: 39f177305be6f3246908ad2e44ee9243, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HandPoseProvider: {fileID: 133509338880877498}
+  m_TargetRayInteractor: {fileID: 0}
+  m_TeleportAction: {fileID: 6331412046316201350}
+  m_PinchOpenThreshold: 0.75
+  m_PinchClosedThreshold: 0.25
+  m_HandRaiseCameraFov: 45
+  m_PinchThreshold: 0.7
+  m_SelectAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Select
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 081dc1e1-f0e2-4c5f-85c5-1e55baa6a4ab
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 187161793506945269, guid: c348712bda248c246b8c49b3db54643f,
+      type: 3}
+  m_UIPressAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: UI Press
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 799efcd9-7cc2-4705-ba75-effbfe41f4d2
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 3279264004350380116, guid: c348712bda248c246b8c49b3db54643f,
+      type: 3}
+--- !u!114 &6331412046316201350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3133494152545806682}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e782ff4887d35ec45ad4198ba56840a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HandPoseProvider: {fileID: 3972231384003196134}
+  m_TargetRayInteractor: {fileID: 0}
+  m_PalmUpThreshold: 0.25
+  m_DirectionLerpSpeed: 0.25
+  m_PinchOpenThreshold: 0.75
+  m_PinchClosedThreshold: 0.25
+  m_HandRaiseCameraFov: 45
+  m_PinchThreshold: 0.7
+  m_PinchSmoothing: 0.35
+  m_ActivateTeleportAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Activate Teleport
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 1b843598-fd03-4240-ad3d-03d9b93a8e10
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: -8061240218431744966, guid: c348712bda248c246b8c49b3db54643f,
+      type: 3}
+  m_InvokeTeleportAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Invoke Teleport
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 2cfd845c-26d8-4cb7-8f07-8fa618eabd8e
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f,
+      type: 3}
+--- !u!114 &2324585737323057118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3133494152545806682}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0801608e5a53ec14dab07c3c936172a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_XRHandTrackingEvents: {fileID: 513866637}
@@ -351,95 +443,6 @@ MonoBehaviour:
     m_JointTransform: {fileID: 3813656589324672594}
   - m_XRHandJointID: 2
     m_JointTransform: {fileID: 2896909076121399914}
---- !u!114 &1187830607224204773
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3133494152545806682}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 39f177305be6f3246908ad2e44ee9243, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_HandPoseProvider: {fileID: 133509338880877498}
-  m_TargetRayInteractor: {fileID: 0}
-  m_TeleportAction: {fileID: 6331412046316201350}
-  m_PinchOpenThreshold: 0.75
-  m_PinchClosedThreshold: 0.25
-  m_HandRaiseCameraFov: 45
-  m_SelectAction:
-    m_UseReference: 1
-    m_Action:
-      m_Name: Select
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 081dc1e1-f0e2-4c5f-85c5-1e55baa6a4ab
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
-      m_Flags: 0
-    m_Reference: {fileID: 187161793506945269, guid: c348712bda248c246b8c49b3db54643f,
-      type: 3}
-  m_UIPressAction:
-    m_UseReference: 1
-    m_Action:
-      m_Name: UI Press
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 799efcd9-7cc2-4705-ba75-effbfe41f4d2
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
-      m_Flags: 0
-    m_Reference: {fileID: 3279264004350380116, guid: c348712bda248c246b8c49b3db54643f,
-      type: 3}
---- !u!114 &6331412046316201350
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3133494152545806682}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e782ff4887d35ec45ad4198ba56840a1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_HandPoseProvider: {fileID: 3972231384003196134}
-  m_TargetRayInteractor: {fileID: 0}
-  m_PalmUpThreshold: 0.25
-  m_DirectionLerpSpeed: 0.25
-  m_PinchOpenThreshold: 0.75
-  m_PinchClosedThreshold: 0.25
-  m_HandRaiseCameraFov: 45
-  m_ActivateTeleportAction:
-    m_UseReference: 1
-    m_Action:
-      m_Name: Activate Teleport
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 1b843598-fd03-4240-ad3d-03d9b93a8e10
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
-      m_Flags: 0
-    m_Reference: {fileID: -8061240218431744966, guid: c348712bda248c246b8c49b3db54643f,
-      type: 3}
-  m_InvokeTeleportAction:
-    m_UseReference: 1
-    m_Action:
-      m_Name: Invoke Teleport
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 2cfd845c-26d8-4cb7-8f07-8fa618eabd8e
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
-      m_Flags: 0
-    m_Reference: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f,
-      type: 3}
 --- !u!1 &3144127963654443376
 GameObject:
   m_ObjectHideFlags: 0

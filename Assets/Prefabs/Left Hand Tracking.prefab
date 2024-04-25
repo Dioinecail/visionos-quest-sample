@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 6479378846657636897}
   - component: {fileID: 3612685328802573908}
   - component: {fileID: 7675892778848847002}
-  - component: {fileID: 4082059375106541404}
+  - component: {fileID: 971353896169900119}
   m_Layer: 0
   m_Name: Left Hand Tracking
   m_TagString: Untagged
@@ -128,10 +128,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_TargetMode: 1
-  m_TargetHand: 1
-  m_HandSkeletonDriver: {fileID: 4082059375106541404}
+  m_HandSkeletonDriver: {fileID: 971353896169900119}
   m_HandFacingAwayTolerance: 75
+  m_GazePoseProvider: {fileID: 0}
   m_AimOffset: {x: 0.03, y: 0.02, z: 0}
+  m_TargetHand: 1
 --- !u!114 &3612685328802573908
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139,16 +140,18 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 773853689519989575}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 39f177305be6f3246908ad2e44ee9243, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_HandPoseProvider: {fileID: 7675892778848847002}
   m_TargetRayInteractor: {fileID: 0}
+  m_TeleportAction: {fileID: 0}
   m_PinchOpenThreshold: 0.75
   m_PinchClosedThreshold: 0.25
   m_HandRaiseCameraFov: 45
+  m_PinchThreshold: 0.7
   m_SelectAction:
     m_UseReference: 1
     m_Action:
@@ -188,11 +191,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_TargetMode: 1
-  m_TargetHand: 1
-  m_HandSkeletonDriver: {fileID: 4082059375106541404}
+  m_HandSkeletonDriver: {fileID: 971353896169900119}
   m_HandFacingAwayTolerance: 75
   m_Joint: 0
---- !u!114 &4082059375106541404
+--- !u!114 &971353896169900119
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -201,7 +203,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 773853689519989575}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07aaccfa1bc2417d8fbd0d9e2e102c2c, type: 3}
+  m_Script: {fileID: 11500000, guid: 0801608e5a53ec14dab07c3c936172a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_XRHandTrackingEvents: {fileID: 639686448}
