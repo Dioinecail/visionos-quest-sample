@@ -8,7 +8,9 @@ namespace Project.Hands
 {
     public class AdaptiveHandSkeletonDriver : XRHandSkeletonDriver
     {
-        [SerializeField] private float m_ForFunFactor = 0.5f;
+        [SerializeField] private Transform m_CameraTransform;
+
+
 
 
 
@@ -35,7 +37,7 @@ namespace Project.Hands
 
                 if (hand.GetJoint(XRHandJointID.Palm).TryGetPose(out var palmJointPose))
                 {
-                    CalculateLocalTransformPoseOculus(wristJointPose, palmJointPose, 1f, out var palmPose);
+                    CalculateLocalTransformPoseOculus(wristJointPose, palmJointPose, out var palmPose);
                     jointLocalPoses[palmIndex] = palmPose;
                 }
 
@@ -56,19 +58,9 @@ namespace Project.Hands
                         var fingerJointPose = Pose.identity;
                         var jointLocalPose = Pose.identity;
 
-                        if(jointId == XRHandJointID.ThumbMetacarpal)
+                        if (hand.GetJoint(jointId).TryGetPose(out fingerJointPose))
                         {
-                            if (hand.GetJoint(jointId).TryGetPose(out fingerJointPose))
-                            {
-                                CalculateLocalTransformPoseOculus(parentPose, fingerJointPose, m_ForFunFactor, out jointLocalPose);
-                            }
-                        }
-                        else
-                        {
-                            if (hand.GetJoint(jointId).TryGetPose(out fingerJointPose))
-                            {
-                                CalculateLocalTransformPoseOculus(parentPose, fingerJointPose, 1f, out jointLocalPose);
-                            }
+                            CalculateLocalTransformPoseOculus(parentPose, fingerJointPose, out jointLocalPose);
                         }
 
                         parentPose = fingerJointPose;
@@ -78,11 +70,36 @@ namespace Project.Hands
             }
         }
 
-        private void CalculateLocalTransformPoseOculus(in Pose parentPose, in Pose jointPose, float scaleFactor, out Pose jointLocalPose)
+        private void CalculateLocalTransformPoseOculus(in Pose parentPose, in Pose jointPose, out Pose jointLocalPose)
         {
             var inverseParentRotation = Quaternion.Inverse(parentPose.rotation);
-            jointLocalPose.position = inverseParentRotation * ((jointPose.position - parentPose.position) * scaleFactor);
+            jointLocalPose.position = jointPose.position;
             jointLocalPose.rotation = inverseParentRotation * jointPose.rotation;
+        }
+
+        protected override void ApplyUpdatedTransformPoses()
+        {
+            // Apply the local poses to the joint transforms
+            for (var i = 0; i < m_JointTransforms.Length; i++)
+            {
+                if (m_HasJointTransformMask[i])
+                {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    if (m_JointTransforms[i] == null)
+                    {
+                        Debug.LogError("XR Hand Skeleton has detected that a joint transform has been destroyed after it was initialized." +
+                            " After removing or modifying transform joint references at runtime it is required to call InitializeFromSerializedReferences to update the joint transform references.", this);
+
+                        continue;
+                    }
+#endif
+                    var localPose = m_JointLocalPoses[i];
+                    var pos = m_CameraTransform.TransformPoint(localPose.position);
+
+                    m_JointTransforms[i].position = pos;
+                    m_JointTransforms[i].localRotation = localPose.rotation;
+                }
+            }
         }
     }
 }
