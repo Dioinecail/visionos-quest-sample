@@ -12,6 +12,8 @@ namespace Project.Hands
         [SerializeField] private Transform m_CameraTransform;
         [SerializeField] private TMPro.TMP_Text m_Debug;
 
+        private Dictionary<XRHandJointID, Pose> m_LastMetacarpalPositions = new Dictionary<XRHandJointID, Pose>();
+
 
 
         protected override void OnJointsUpdated(XRHandJointsUpdatedEventArgs args)
@@ -61,6 +63,18 @@ namespace Project.Hands
                         if (hand.GetJoint(jointId).TryGetPose(out fingerJointPose))
                         {
                             CalculateLocalTransformPose(parentPose, fingerJointPose, out jointLocalPose);
+
+                            if (IsMetacarpal(jointId))
+                            {
+                                if(!IsVerySmall(jointLocalPose))
+                                {
+                                    m_LastMetacarpalPositions[jointId] = jointLocalPose;
+                                }
+                                else
+                                {
+                                    jointLocalPose = m_LastMetacarpalPositions[jointId];
+                                }
+                            }
                         }
 
                         parentPose = fingerJointPose;
@@ -79,10 +93,7 @@ namespace Project.Hands
 
         private void Update()
         {
-            var joints = m_JointTransformReferences.Where(j => j.xrHandJointID == XRHandJointID.LittleMetacarpal
-            || j.xrHandJointID == XRHandJointID.RingMetacarpal
-            || j.xrHandJointID == XRHandJointID.MiddleMetacarpal
-            || j.xrHandJointID == XRHandJointID.IndexMetacarpal);
+            var joints = m_JointTransformReferences.Where(j => IsMetacarpal(j.xrHandJointID));
 
             var sb = new System.Text.StringBuilder();
 
@@ -95,6 +106,19 @@ namespace Project.Hands
             }
 
             m_Debug.text = sb.ToString();
+        }
+
+        private bool IsMetacarpal(XRHandJointID id)
+        {
+            return id == XRHandJointID.LittleMetacarpal
+            || id == XRHandJointID.RingMetacarpal
+            || id == XRHandJointID.MiddleMetacarpal
+            || id == XRHandJointID.IndexMetacarpal;
+        }
+
+        private bool IsVerySmall(Pose pose)
+        {
+            return Mathf.Abs(pose.position.x) < 0.01f && Mathf.Abs(pose.position.y) < 0.01f && Mathf.Abs(pose.position.z) < 0.01f;
         }
     }
 }
