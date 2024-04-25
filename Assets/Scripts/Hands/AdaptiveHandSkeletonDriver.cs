@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.XR.Hands;
@@ -9,8 +10,7 @@ namespace Project.Hands
     public class AdaptiveHandSkeletonDriver : XRHandSkeletonDriver
     {
         [SerializeField] private Transform m_CameraTransform;
-
-
+        [SerializeField] private TMPro.TMP_Text m_Debug;
 
 
 
@@ -37,7 +37,7 @@ namespace Project.Hands
 
                 if (hand.GetJoint(XRHandJointID.Palm).TryGetPose(out var palmJointPose))
                 {
-                    CalculateLocalTransformPoseOculus(wristJointPose, palmJointPose, out var palmPose);
+                    CalculateLocalTransformPose(wristJointPose, palmJointPose, out var palmPose);
                     jointLocalPoses[palmIndex] = palmPose;
                 }
 
@@ -60,7 +60,7 @@ namespace Project.Hands
 
                         if (hand.GetJoint(jointId).TryGetPose(out fingerJointPose))
                         {
-                            CalculateLocalTransformPoseOculus(parentPose, fingerJointPose, out jointLocalPose);
+                            CalculateLocalTransformPose(parentPose, fingerJointPose, out jointLocalPose);
                         }
 
                         parentPose = fingerJointPose;
@@ -70,36 +70,31 @@ namespace Project.Hands
             }
         }
 
-        private void CalculateLocalTransformPoseOculus(in Pose parentPose, in Pose jointPose, out Pose jointLocalPose)
+        private static void CalculateLocalTransformPose(in Pose parentPose, in Pose jointPose, out Pose jointLocalPose)
         {
             var inverseParentRotation = Quaternion.Inverse(parentPose.rotation);
-            jointLocalPose.position = jointPose.position;
+            jointLocalPose.position = inverseParentRotation * (jointPose.position - parentPose.position);
             jointLocalPose.rotation = inverseParentRotation * jointPose.rotation;
         }
 
-        protected override void ApplyUpdatedTransformPoses()
+        private void Update()
         {
-            // Apply the local poses to the joint transforms
-            for (var i = 0; i < m_JointTransforms.Length; i++)
+            var joints = m_JointTransformReferences.Where(j => j.xrHandJointID == XRHandJointID.LittleMetacarpal
+            || j.xrHandJointID == XRHandJointID.RingMetacarpal
+            || j.xrHandJointID == XRHandJointID.MiddleMetacarpal
+            || j.xrHandJointID == XRHandJointID.IndexMetacarpal);
+
+            var sb = new System.Text.StringBuilder();
+
+            foreach (var joint in joints)
             {
-                if (m_HasJointTransformMask[i])
-                {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    if (m_JointTransforms[i] == null)
-                    {
-                        Debug.LogError("XR Hand Skeleton has detected that a joint transform has been destroyed after it was initialized." +
-                            " After removing or modifying transform joint references at runtime it is required to call InitializeFromSerializedReferences to update the joint transform references.", this);
+                var p = joint.jointTransform.position;
+                var lp = joint.jointTransform.localPosition;
 
-                        continue;
-                    }
-#endif
-                    var localPose = m_JointLocalPoses[i];
-                    var pos = m_CameraTransform.TransformPoint(localPose.position);
-
-                    m_JointTransforms[i].position = pos;
-                    m_JointTransforms[i].localRotation = localPose.rotation;
-                }
+                sb.AppendLine($"index: '{joint.xrHandJointID}' | pos: '{p}' | local(cm): '{lp * 10f}'");
             }
+
+            m_Debug.text = sb.ToString();
         }
     }
 }
