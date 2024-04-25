@@ -12,7 +12,8 @@ namespace Project.Hands
         [SerializeField] private Transform m_CameraTransform;
         [SerializeField] private TMPro.TMP_Text m_Debug;
 
-        private Dictionary<XRHandJointID, Pose> m_LastMetacarpalPositions = new Dictionary<XRHandJointID, Pose>();
+        private Dictionary<XRHandJointID, Pose> m_LastParentPoses = new Dictionary<XRHandJointID, Pose>();
+        private Dictionary<XRHandJointID, Pose> m_LastFingerPoses = new Dictionary<XRHandJointID, Pose>();
 
 
 
@@ -35,7 +36,9 @@ namespace Project.Hands
             if (hand.GetJoint(XRHandJointID.Wrist).TryGetPose(out var wristJointPose))
             {
                 jointLocalPoses[wristIndex] = wristJointPose;
+
                 var palmIndex = XRHandJointID.Palm.ToIndex();
+                var wristTransform = m_JointTransformReferences.FirstOrDefault(j => j.xrHandJointID == XRHandJointID.Wrist).jointTransform;
 
                 if (hand.GetJoint(XRHandJointID.Palm).TryGetPose(out var palmJointPose))
                 {
@@ -62,22 +65,30 @@ namespace Project.Hands
 
                         if (hand.GetJoint(jointId).TryGetPose(out fingerJointPose))
                         {
+                            //                          world pos   world pos        out local pos 
                             CalculateLocalTransformPose(parentPose, fingerJointPose, out jointLocalPose);
 
-                            if (IsMetacarpal(jointId))
-                            {
-                                if(!IsVerySmall(jointLocalPose))
-                                {
-                                    m_LastMetacarpalPositions[jointId] = jointLocalPose;
-                                }
-                                else
-                                {
-                                    jointLocalPose = m_LastMetacarpalPositions[jointId];
-                                }
-                            }
+                            var parentLocal = wristTransform.InverseTransformPoint(parentPose.position);
+                            var fingerLocal = wristTransform.InverseTransformPoint(fingerJointPose.position);
+
+                            m_LastParentPoses[jointId] = new Pose(parentLocal, parentPose.rotation);
+                            m_LastFingerPoses[jointId] = new Pose(fingerLocal, fingerJointPose.rotation);
+                        }
+                        else if (m_LastParentPoses.TryGetValue(jointId, out var parentCachedPose)
+                            && m_LastFingerPoses.TryGetValue(jointId, out var fingerCachedPose))
+                        {
+                            var parentWorld = wristTransform.TransformPoint(parentCachedPose.position);
+                            var fingerWorld = wristTransform.TransformPoint(fingerCachedPose.position);
+
+                            parentPose = new Pose(parentWorld, parentCachedPose.rotation);
+                            fingerJointPose = new Pose(fingerWorld, fingerCachedPose.rotation);
+
+                            CalculateLocalTransformPose(parentPose, fingerJointPose, out jointLocalPose);
                         }
 
+                        // world pos world pos
                         parentPose = fingerJointPose;
+                        //                            local pos
                         jointLocalPoses[jointIndex] = jointLocalPose;
                     }
                 }
@@ -114,11 +125,6 @@ namespace Project.Hands
             || id == XRHandJointID.RingMetacarpal
             || id == XRHandJointID.MiddleMetacarpal
             || id == XRHandJointID.IndexMetacarpal;
-        }
-
-        private bool IsVerySmall(Pose pose)
-        {
-            return Mathf.Abs(pose.position.x) < 0.01f && Mathf.Abs(pose.position.y) < 0.01f && Mathf.Abs(pose.position.z) < 0.01f;
         }
     }
 }
